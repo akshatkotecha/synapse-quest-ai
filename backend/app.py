@@ -10,6 +10,7 @@ from flask_cors import CORS
 from chat import chat_bp
 from alert_engine import generate_alerts
 from leaderboard import compute_leaderboard
+from ai_features import bug_prediction_heatmap, auto_refactor
 
 app = Flask(__name__)
 CORS(app)
@@ -44,6 +45,42 @@ def analyze():
     result = analyze_code_for_task(task, code)
 
     return jsonify(result)
+
+# In-memory leaderboard store
+_leaderboard_store = {}
+
+@app.route("/analyze-and-rank", methods=["POST"])
+def analyze_and_rank():
+    data = request.json
+    user = data.get("user", "Anonymous")
+    code = data.get("code")
+    if not code:
+        return jsonify({"error": "No code provided"}), 400
+
+    task = {
+        "title": data.get("title", "Untitled"),
+        "expected_outputs": data.get("expected_outputs", [])
+    }
+
+    result = analyze_code_for_task(task, code)
+    final_score = result.get("final_score", 0)
+
+    # Update leaderboard store
+    if user not in _leaderboard_store:
+        _leaderboard_store[user] = {"submissions": 0, "best_score": 0, "total_score": 0}
+    entry = _leaderboard_store[user]
+    entry["submissions"] += 1
+    entry["total_score"] += final_score
+    entry["best_score"] = max(entry["best_score"], final_score)
+
+    # Build leaderboard sorted by best score
+    leaderboard = sorted(
+        [{"user": u, "score": v["best_score"], "submissions": v["submissions"]} for u, v in _leaderboard_store.items()],
+        key=lambda x: x["score"], reverse=True
+    )
+    user_rank = next((i + 1 for i, e in enumerate(leaderboard) if e["user"] == user), None)
+
+    return jsonify({"analysis": result, "leaderboard": leaderboard, "user_rank": user_rank})
 @app.route("/github-webhook", methods=["POST"])
 def github_webhook():
     payload = request.json
@@ -67,6 +104,24 @@ def github_webhook():
         print(f"Commit by {author} analyzed:", result)
 
     return jsonify({"status": "processed"})
+@app.route('/bug-heatmap', methods=['POST'])
+def bug_heatmap():
+
+    data = request.json
+    code = data.get("code")
+
+    result = bug_prediction_heatmap(code)
+
+    return jsonify(result)
+@app.route('/auto-refactor', methods=['POST'])
+def auto_refactor_code():
+
+    data = request.json
+    code = data.get("code")
+
+    result = auto_refactor(code)
+
+    return jsonify(result)
 
 
 
