@@ -46,5 +46,3 @@ Tools & Integration
 - GitHub API  
 
 ---
-
-## Project Structure
