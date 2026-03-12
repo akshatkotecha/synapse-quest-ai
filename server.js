@@ -67,6 +67,9 @@ app.get('/leaderboard', (req, res) => {
   })).sort((a, b) => b.score - a.score);
   res.json(scores.slice(0, 5));
 });
+app.get('/', (req, res) => {
+  res.send('Synapse Quest Behavior Engine API Running');
+});
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'PERSON E BEHAVIOR ENGINE LIVE', port: 3002 }));
@@ -75,4 +78,16 @@ app.listen(3002, () => {
   console.log('🚀 PERSON E BEHAVIOR ENGINE: http://localhost:3002');
   console.log('📡 Team D → POST /git/update/user1');
   console.log('📊 Team F → GET /behavior/user1?taskStatus=in_progress');
+});
+
+app.get('/info', (req, res) => {
+  res.json({
+    service: "Synapse Quest Behavior Engine",
+    version: "1.0",
+    endpoints: [
+      "/health",
+      "/git/update/user1",
+      "/behavior/user1"
+    ]
+  });
 });
