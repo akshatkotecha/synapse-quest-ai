@@ -1,6 +1,6 @@
 # Synapse Quest
 
-Synapse Quest is an AI-powered developer productivity and behavior analytics platform developed during the Loop Hackathon.
+Synapse Quest is an AI-powered developer productivity and behavior analytics platform.
 
 The system analyzes developer activity patterns to detect risk factors in software development workflows.
 
